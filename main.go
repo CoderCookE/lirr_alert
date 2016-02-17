@@ -44,7 +44,10 @@ func startPolling() {
 }
 
 func (a *AlertChecker) CheckAlert() {
-	resp, _ := http.Get("http://web.mta.info/status/serviceStatus.txt")
+	resp, err := http.Get("http://web.mta.info/status/serviceStatus.txt")
+	if err != nil {
+		log.Fatal(err.Error)
+	}
 	defer resp.Body.Close()
 	rawData, _ := ioutil.ReadAll(resp.Body)
 	htmlData := string(rawData)
@@ -75,7 +78,7 @@ func (a *AlertChecker) CheckAlert() {
 
 				a.lines[v] = &Line{name, status, text}
 
-				log.Printf(a.lines[v].text, a.lines[v].status)
+				log.Printf(a.lines[v].name, a.lines[v].text, a.lines[v].status)
 			}
 		}
 	}
