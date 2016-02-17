@@ -3,12 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 )
 
@@ -27,58 +24,10 @@ func Lirr(w http.ResponseWriter, r *http.Request) {
 func startPolling() {
 	a := AlertChecker{}
 	a.lines = make(map[string]*Line)
+	a.CheckAlert()
 
 	for {
-		<-time.After(15 * time.Second)
+		<-time.After(60 * time.Second)
 		go a.CheckAlert()
-	}
-}
-
-type AlertChecker struct {
-	Raw   string
-	lines map[string]*Line
-}
-
-type Line struct {
-	name   string
-	status string
-	text   string
-}
-
-func (a *AlertChecker) CheckAlert() {
-	resp, err := http.Get("http://web.mta.info/status/serviceStatus.txt")
-	if err != nil {
-		log.Fatal(err.Error)
-	}
-	defer resp.Body.Close()
-	rawData, _ := ioutil.ReadAll(resp.Body)
-	htmlData := string(rawData)
-	nameRegExp, _ := regexp.Compile("<name>(.*)</name>")
-	statusRegExp, _ := regexp.Compile("<status>(.*)</status>")
-	textRegExp, _ := regexp.Compile("<text>(.*)</text>")
-	if htmlData != a.Raw {
-		a.Raw = htmlData
-		rawTrains := fmt.Sprintf("%q", strings.SplitAfter(htmlData, "LIRR>")[1])
-		s := strings.SplitAfter(rawTrains, "</line>")
-
-		for _, v := range s {
-			var currentText string
-			var currentStatus string
-
-			if a.lines[v] != nil {
-				currentText = a.lines[v].text
-				currentStatus = a.lines[v].status
-			}
-
-			status := string(statusRegExp.Find([]byte(v)))
-			text := string(textRegExp.Find([]byte(v)))
-			name := string(nameRegExp.Find([]byte(v)))
-
-			if currentStatus != status || currentText != text {
-				a.lines[v] = &Line{name, status, text}
-
-				log.Printf("%s", a.lines[v])
-			}
-		}
 	}
 }
