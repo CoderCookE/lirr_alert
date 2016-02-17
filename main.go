@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -19,7 +20,8 @@ func main() {
 }
 
 func Lirr(w http.ResponseWriter, r *http.Request) {
-	fmt.Sprintf("http://www.movable-ink-7158.com/p/rp/60e6a4c03b713777.png?cache_buster=%s", time.Now().String())
+	cachebuster := rand.Intn(50)
+	w.Write([]byte(fmt.Sprintf("http://www.movable-ink-7158.com/p/rp/60e6a4c03b713777.png?cache_buster=%v", cachebuster)))
 }
 
 func startPolling() {
@@ -76,7 +78,6 @@ func (a *AlertChecker) CheckAlert() {
 				a.lines[v] = &Line{name, status, text}
 
 				log.Printf("%s", a.lines[v])
-				log.Printf(a.lines[v].name, a.lines[v].text, a.lines[v].status)
 			}
 		}
 	}
