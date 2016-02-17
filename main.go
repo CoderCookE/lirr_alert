@@ -22,6 +22,16 @@ func Lirr(w http.ResponseWriter, r *http.Request) {
 	fmt.Sprintf("http://www.movable-ink-7158.com/p/rp/60e6a4c03b713777.png?cache_buster=%s", time.Now().String())
 }
 
+func startPolling() {
+	a := AlertChecker{}
+	a.lines = make(map[string]*Line)
+
+	for {
+		<-time.After(15 * time.Second)
+		go a.CheckAlert()
+	}
+}
+
 type AlertChecker struct {
 	Raw   string
 	lines map[string]*Line
@@ -31,16 +41,6 @@ type Line struct {
 	name   string
 	status string
 	text   string
-}
-
-func startPolling() {
-	a := AlertChecker{}
-	a.lines = make(map[string]*Line)
-
-	for {
-		<-time.After(15 * time.Second)
-		go a.CheckAlert()
-	}
 }
 
 func (a *AlertChecker) CheckAlert() {
@@ -73,11 +73,9 @@ func (a *AlertChecker) CheckAlert() {
 			name := string(nameRegExp.Find([]byte(v)))
 
 			if currentStatus != status || currentText != text {
-
-				log.Printf("%s", a.lines[v])
-
 				a.lines[v] = &Line{name, status, text}
 
+				log.Printf("%s", a.lines[v])
 				log.Printf(a.lines[v].name, a.lines[v].text, a.lines[v].status)
 			}
 		}
